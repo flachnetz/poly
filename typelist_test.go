@@ -1,14 +1,17 @@
 package poly
 
 import (
+	"reflect"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"reflect"
 )
 
-type A struct{}
-type B struct{}
-type I interface{}
+type (
+	A struct{}
+	B struct{}
+	I interface{}
+)
 
 var _ = Describe("TypeOf", func() {
 	It("should work for structs", func() {

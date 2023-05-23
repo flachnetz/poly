@@ -58,7 +58,7 @@ func (c *Poly[I, Tl]) UnmarshalJSON(bytes []byte) error {
 		}
 
 		// found our target type
-		var ptrInstance = reflect.New(typ)
+		ptrInstance := reflect.New(typ)
 
 		// deserialize to value
 		if err := json.Unmarshal(envelope.Value, ptrInstance.Interface()); err != nil {
