@@ -1,6 +1,6 @@
 module github.com/flachnetz/poly
 
-go 1.20
+go 1.19
 
 require (
 	github.com/onsi/ginkgo/v2 v2.9.5
