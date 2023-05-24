@@ -15,21 +15,36 @@ type (
 
 var _ = Describe("TypeOf", func() {
 	It("should work for structs", func() {
-		tA := reflect.TypeOf((*A)(nil)).Elem()
-		tB := reflect.TypeOf((*B)(nil)).Elem()
+		tA := Type{
+			RuntimeType: reflect.TypeOf((*A)(nil)).Elem(),
+			Name:        "github.com/flachnetz/poly.A",
+		}
+		tB := Type{
+			RuntimeType: reflect.TypeOf((*B)(nil)).Elem(),
+			Name:        "github.com/flachnetz/poly.B",
+		}
 
 		Expect(typeOf[A]()).To(Equal(tA))
 		Expect(typeOf[B]()).To(Equal(tB))
 	})
 
 	It("should work for interfaces", func() {
-		tI := reflect.TypeOf((*I)(nil)).Elem()
+		tI := Type{
+			RuntimeType: reflect.TypeOf((*I)(nil)).Elem(),
+			Name:        "github.com/flachnetz/poly.I",
+		}
 		Expect(typeOf[I]()).To(Equal(tI))
 	})
 
 	It("should work for pointers", func() {
-		tA := reflect.TypeOf((**A)(nil)).Elem()
-		tI := reflect.TypeOf((**I)(nil)).Elem()
+		tA := Type{
+			RuntimeType: reflect.TypeOf((**A)(nil)).Elem(),
+			Name:        "github.com/flachnetz/poly.A",
+		}
+		tI := Type{
+			RuntimeType: reflect.TypeOf((**I)(nil)).Elem(),
+			Name:        "github.com/flachnetz/poly.I",
+		}
 		Expect(typeOf[*A]()).To(Equal(tA))
 		Expect(typeOf[*I]()).To(Equal(tI))
 	})
@@ -45,10 +60,10 @@ var _ = Describe("Typelist", func() {
 		var t TypeItem[A, TypeItem[B, TypeItem[I, Nil]]]
 
 		Expect(t.Types()).To(
-			Equal([]reflect.Type{
-				reflect.TypeOf((*A)(nil)).Elem(),
-				reflect.TypeOf((*B)(nil)).Elem(),
-				reflect.TypeOf((*I)(nil)).Elem(),
+			Equal([]Type{
+				{RuntimeType: reflect.TypeOf((*A)(nil)).Elem(), Name: "github.com/flachnetz/poly.A"},
+				{RuntimeType: reflect.TypeOf((*B)(nil)).Elem(), Name: "github.com/flachnetz/poly.B"},
+				{RuntimeType: reflect.TypeOf((*I)(nil)).Elem(), Name: "github.com/flachnetz/poly.I"},
 			}),
 		)
 	})

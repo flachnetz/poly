@@ -13,21 +13,28 @@ type Poly[I any, Tl TypeList] struct {
 	Value I
 }
 
-func (c *Poly[I, Tl]) MarshalJSON() ([]byte, error) {
-	type Envelope struct {
-		Typ   string `json:"type"`
-		Value I      `json:"value"`
-	}
+type envelope[I any] struct {
+	Type  string `json:"type"`
+	Value I      `json:"value"`
+}
 
+func (c *Poly[I, Tl]) MarshalJSON() ([]byte, error) {
 	rValue := reflect.ValueOf(c.Value)
 	if !rValue.IsValid() {
 		return []byte("null"), nil
 	}
 
-	return json.Marshal(Envelope{
-		Typ:   typeNameOf(rValue.Type()),
-		Value: c.Value,
-	})
+	var typeList Tl
+	for _, typ := range typeList.Types() {
+		if typ.RuntimeType == rValue.Type() {
+			return json.Marshal(envelope[I]{
+				Type:  typ.Name,
+				Value: c.Value,
+			})
+		}
+	}
+
+	return nil, fmt.Errorf("no type mapping in TypeList found for %s", rValue.Type().String())
 }
 
 func (c *Poly[I, Tl]) UnmarshalJSON(bytes []byte) error {
@@ -37,13 +44,8 @@ func (c *Poly[I, Tl]) UnmarshalJSON(bytes []byte) error {
 		c.Value = nilValue
 		return nil
 	}
-
-	var envelope struct {
-		Type  string          `json:"type"`
-		Value json.RawMessage `json:"value"`
-	}
-
 	// read into envelope to get the type
+	var envelope envelope[json.RawMessage]
 	if err := json.Unmarshal(bytes, &envelope); err != nil {
 		return err
 	}
@@ -53,12 +55,12 @@ func (c *Poly[I, Tl]) UnmarshalJSON(bytes []byte) error {
 	types := typeList.Types()
 
 	for _, typ := range types {
-		if typeNameOf(typ) != envelope.Type {
+		if typ.Name != envelope.Type {
 			continue
 		}
 
 		// found our target type
-		ptrInstance := reflect.New(typ)
+		ptrInstance := reflect.New(typ.RuntimeType)
 
 		// deserialize to value
 		if err := json.Unmarshal(envelope.Value, ptrInstance.Interface()); err != nil {
@@ -68,7 +70,7 @@ func (c *Poly[I, Tl]) UnmarshalJSON(bytes []byte) error {
 		// convert to the target type
 		value, ok := ptrInstance.Elem().Interface().(I)
 		if !ok {
-			return fmt.Errorf("%s does not implement the required interface", typ.String())
+			return fmt.Errorf("%q does not implement the required interface", typ.Name)
 		}
 
 		c.Value = value
@@ -77,12 +79,4 @@ func (c *Poly[I, Tl]) UnmarshalJSON(bytes []byte) error {
 	}
 
 	return fmt.Errorf("did not find a type for %q", envelope.Type)
-}
-
-func typeNameOf(typ reflect.Type) string {
-	for typ.Kind() == reflect.Pointer {
-		typ = typ.Elem()
-	}
-
-	return fmt.Sprintf("%s.%s", typ.PkgPath(), typ.Name())
 }

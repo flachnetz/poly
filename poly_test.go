@@ -27,7 +27,7 @@ var _ = Describe("Poly", func() {
 	})
 
 	It("can serialize a ptr value", func() {
-		var c Poly[Speaker, TypeItem[Dog, TypeItem[Cat, Nil]]]
+		var c Poly[Speaker, TypeItem[*Dog, TypeItem[*Cat, Nil]]]
 		c.Value = &Dog{IsDog: true}
 
 		bytes, err := c.MarshalJSON()
